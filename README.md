@@ -1,4 +1,8 @@
 # pytorch-classification
+Code for partial learning of networks according to the paper:
+[Intriguing Properties of Randomly Weighted Networks: Generalizing while Learning Next to Nothing](https://drive.google.com/open?id=1WiGWY5Isj0SOsZ20r30NVTuov57T6_-d)
+
+
 Classification on CIFAR-10/100 and ImageNet with PyTorch.
 
 ## Features
