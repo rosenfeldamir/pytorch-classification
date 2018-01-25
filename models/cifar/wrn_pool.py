@@ -3,7 +3,17 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-__all__ = ['wrn']
+__all__ = ['wrn_pool']
+
+
+def makePoolingConvolution(n_channels,kernel_size,stride):
+    c = nn.Conv2d(in_channels=n_channels,out_channels=n_channels,groups=n_channels,
+    	kernel_size=kernel_size,stride=stride,padding=0,bias=False)
+    #c.weight.data = torch.zeros(n_channels,n_channels,kernel_size,kernel_size,groups=n_channels)
+    #for i in range(n_channels):
+    #    c.weight.data[i,i,:,:]=1.0/(kernel_size**2)
+    #c.bias.data[:]=0
+    return c
 
 class BasicBlock(nn.Module):
     def __init__(self, in_planes, out_planes, stride, dropRate=0.0):
@@ -43,9 +53,9 @@ class NetworkBlock(nn.Module):
     def forward(self, x):
         return self.layer(x)
 
-class WideResNet(nn.Module):
+class WideResNet_Pool(nn.Module):
     def __init__(self, depth, num_classes, widen_factor=1, dropRate=0.0):
-        super(WideResNet, self).__init__()
+        super(WideResNet_Pool, self).__init__()
         nChannels = [16, 16*widen_factor, 32*widen_factor, 64*widen_factor]
         assert (depth - 4) % 6 == 0, 'depth should be 6n+4'
         n = (depth - 4) / 6
@@ -74,6 +84,9 @@ class WideResNet(nn.Module):
                 m.bias.data.zero_()
             elif isinstance(m, nn.Linear):
                 m.bias.data.zero_()
+        self.pooling_convolution = makePoolingConvolution(640,8,1)
+        #for p in self.pooling_convolution.parameters():
+        #	p.requires_grad=False
                 
     def forward(self, x):
         out = self.conv1(x)
@@ -81,13 +94,21 @@ class WideResNet(nn.Module):
         out = self.block2(out)
         out = self.block3(out)
         out = self.relu(self.bn1(out))
-        out = F.avg_pool2d(out, 8)
+
+        out = self.pooling_convolution(out);
+        #out = F.avg_pool2d(out, 8)
+        #print '****'
+        #print out.size()
+        
+        #print '***'
+        #print (out-out2).abs().mean()
+
         out = out.view(-1, self.nChannels)
         return self.fc(out)
 
-def wrn(**kwargs):
+def wrn_pool(**kwargs):
     """
     Constructs a Wide Residual Networks.
     """
-    model = WideResNet(**kwargs)
+    model = WideResNet_Pool(**kwargs)
     return model

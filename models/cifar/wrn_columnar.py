@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-__all__ = ['wrn']
+__all__ = ['wrn_columnar']
 
 class BasicBlock(nn.Module):
     def __init__(self, in_planes, out_planes, stride, dropRate=0.0):
@@ -11,15 +11,15 @@ class BasicBlock(nn.Module):
         self.bn1 = nn.BatchNorm2d(in_planes)
         self.relu1 = nn.ReLU(inplace=True)
         self.conv1 = nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
-                               padding=1, bias=False)
+                               padding=1, bias=False,groups=in_planes)
         self.bn2 = nn.BatchNorm2d(out_planes)
         self.relu2 = nn.ReLU(inplace=True)
         self.conv2 = nn.Conv2d(out_planes, out_planes, kernel_size=3, stride=1,
-                               padding=1, bias=False)
+                               padding=1, bias=False,groups=out_planes)
         self.droprate = dropRate
         self.equalInOut = (in_planes == out_planes)
         self.convShortcut = (not self.equalInOut) and nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride,
-                               padding=0, bias=False) or None
+                               padding=0, bias=False,groups=in_planes) or None
     def forward(self, x):
         if not self.equalInOut:
             x = self.relu1(self.bn1(x))
@@ -43,16 +43,16 @@ class NetworkBlock(nn.Module):
     def forward(self, x):
         return self.layer(x)
 
-class WideResNet(nn.Module):
+class WideResNet_columnar(nn.Module):
     def __init__(self, depth, num_classes, widen_factor=1, dropRate=0.0):
-        super(WideResNet, self).__init__()
+        super(WideResNet_columnar, self).__init__()
         nChannels = [16, 16*widen_factor, 32*widen_factor, 64*widen_factor]
         assert (depth - 4) % 6 == 0, 'depth should be 6n+4'
         n = (depth - 4) / 6
         block = BasicBlock
         # 1st conv before any network block
         self.conv1 = nn.Conv2d(3, nChannels[0], kernel_size=3, stride=1,
-                               padding=1, bias=False)
+                               padding=1, bias=False)#,groups=nChannels[0])
         # 1st block
         self.block1 = NetworkBlock(n, nChannels[0], nChannels[1], block, 1, dropRate)
         # 2nd block
@@ -85,9 +85,9 @@ class WideResNet(nn.Module):
         out = out.view(-1, self.nChannels)
         return self.fc(out)
 
-def wrn(**kwargs):
+def wrn_columnar(**kwargs):
     """
     Constructs a Wide Residual Networks.
     """
-    model = WideResNet(**kwargs)
+    model = WideResNet_columnar(**kwargs)
     return model

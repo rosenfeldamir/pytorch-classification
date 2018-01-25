@@ -62,9 +62,20 @@ Densenet-161             22.35           6.20
 """
 
 from .alexnet import *
+from .alexnet_partial import *
+
 from .vgg import *
+from .vgg_partial import *
+
 from .resnet import *
 from .resnext import *
 from .wrn import *
+from .wrn_partial import *
+from .wrn_pool import *
+from .wrn_norelu import *
+from .wrn_primed import *
+from .wrn_columnar import *
 from .preresnet import *
 from .densenet import *
+from .densenet_partial import *
+from .split_conv import *

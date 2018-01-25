@@ -22,7 +22,6 @@ import torchvision.datasets as datasets
 import models.cifar as models
 
 from utils import Bar, Logger, AverageMeter, accuracy, mkdir_p, savefig
-from torch.optim.lr_scheduler import CosineAnnealingLR
 
 
 model_names = sorted(name for name in models.__dict__
@@ -58,10 +57,6 @@ parser.add_argument('--drop', '--dropout', default=0, type=float,
                     metavar='Dropout', help='Dropout ratio')
 parser.add_argument('--schedule', type=int, nargs='+', default=[150, 225],
                         help='Decrease learning rate at these epochs.')
-
-parser.add_argument('--sgdr', type=int, default=-1,
-                        help='use cosine learning rate for specific number of epochs (just one cycle)')
-
 parser.add_argument('--gamma', type=float, default=0.1, help='LR is multiplied by gamma on schedule.')
 parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
                     help='momentum')
@@ -88,15 +83,8 @@ parser.add_argument('--manualSeed', type=int, help='manual seed')
 parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
                     help='evaluate model on validation set')
 
-parser.add_argument('--learn-bn', type=str2bool,default=True,
+parser.add_argument('--learn-bn', type=str2bool,default=False,
                     help='whether to learn batchnorm layers or not (useful for fine-tuning)')
-
-parser.add_argument('--print-params-and-exit', type=str2bool,default=False,
-                    help='just print number of parameters to file')
-
-parser.add_argument('--only-last', type=str2bool,default=False,
-                    help='whether to learn only the last layer or not.')
-
 
 parser.add_argument('--subsample', type=float,default=1.0,
                     help='subsampling ratio for quick evaluation of training methods')
@@ -110,29 +98,16 @@ parser.add_argument('-r', '--retrain-layer', dest='retrain_layer',type=str, defa
 parser.add_argument('-f', '--only-layer', dest='only_layer',type=str, default='none', help='which layer to train (only this layer!)')
 parser.add_argument('-o', '--optimizer', type=str, default='sgd', help='optimizer')
 
-parser.add_argument('-p', '--part', type=float, default='-1', help='part(fraction) of filters to learn at each layer.')
+parser.add_argument('-p', '--part', type=float, default='1.0', help='part(fraction) of filters to learn at each layer.')
 
 parser.add_argument('--zero-fixed-part', type=str2bool,default=False,
                     help='retain fixed convolutional filters or zero them out (effectively reducing number of filters')
-parser.add_argument('--class-subset', default='_',
-                    help='which subset of classes to train on (delimited with _, for example 3_5). if not specified, train on all classes.',
-                    type=str)
-
-#parser.add_argument('--req-perf-after-10-epochs', default=-1,type=int,
-#                    help='stop after 10 epochs if this minimal performance is not obtained, -1 to ignore this option(default)',
 
 args = parser.parse_args()
 state = {k: v for k, v in args._get_kwargs()}
 
-assert not ('partial' in args.arch and args.part==-1),'partial architecture and part of -1 mutually exclusive.\nEither choose part > 0 or non-partial architecture.'
-
-print('PART:',args.part)
-
 # Validate dataset
 assert args.dataset == 'cifar10' or args.dataset == 'cifar100', 'Dataset can only be cifar10 or cifar100.'
-
-if args.sgdr > 0:
-    args.epochs = args.sgdr
 
 # Use CUDA
 os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu_id
@@ -153,7 +128,7 @@ def reinit_model_layer(model, retrain_layer, initial_dict):
     
     # copy over from the initial dict's layer to the existing model
     # for retraining
-
+    
     assert retrain_layer in ['conv1','block1','block2','block3','fc'],'must choose to retrain an existing layer'
     print('re-initializing model with layer:',retrain_layer)
     sd = model.state_dict()
@@ -184,18 +159,8 @@ def only_layer(model, theLayer):
     
     # copy over from the initial dict's layer to the existing model
     # for retraining
-    model_name = str(type(model.module)).lower()
-    valid_layers = ['conv1','block1','block2','block3','fc']
-
-    print('!!!!',model_name)
-    if 'dense' in model_name:
-        print('YES')
-        valid_layers = [p.replace('block','dense') for p in valid_layers]
-        theLayer = theLayer.replace('block', 'dense')
-
-    assert theLayer in valid_layers, 'train_only: must choose to train an existing layer'
-
-
+    
+    assert theLayer in ['conv1','block1','block2','block3','fc'],'train_only: must choose to train an existing layer'
     print('freezing all layers except:',theLayer)
     
     # freeze all parameters except for the required layer.
@@ -242,7 +207,7 @@ def main():
         num_classes = 100
 
 
-    trainset = dataloader(root='/home/amir/'+args.dataset, train=True, download=True, transform=transform_train)
+    trainset = dataloader(root='/home/amir/cifar-10', train=True, download=True, transform=transform_train)
 
     train_sampler=None
     toShuffle = True
@@ -254,15 +219,9 @@ def main():
         print('==>SAMPLING FIRST',n,'TRAINING IMAGES')
 
 
-    if args.class_subset != '_':
-        print('*'+args.class_subset+'*')
-        toShuffle = False
-        args.class_subset = [int(i) for i in args.class_subset.split('_')]
-        indices = [i for i, p in enumerate(trainset.train_labels) if p in args.class_subset]
-        train_sampler = data.sampler.SubsetRandomSampler(indices);
     trainloader = data.DataLoader(trainset, batch_size=args.train_batch, shuffle=toShuffle, num_workers=args.workers,sampler=train_sampler)
 
-    testset = dataloader(root='/home/amir/'+args.dataset, train=False, download=False, transform=transform_test)
+    testset = dataloader(root='/home/amir/cifar-10', train=False, download=False, transform=transform_test)
     test_sampler=None
     if args.test_subsample < 1:
         n = int(float(len(testset)) * args.test_subsample)
@@ -270,10 +229,6 @@ def main():
         test_sampler = data.sampler.SubsetRandomSampler(range(n))
         print('==>SAMPLING FIRST', n, 'TESTTING IMAGES')
 
-    if type(args.class_subset) is list:
-        toShuffle = False
-        indices = [i for i, p in enumerate(testset.test_labels) if p in args.class_subset]
-        test_sampler = data.sampler.SubsetRandomSampler(indices);
 
     testloader = data.DataLoader(testset, batch_size=args.test_batch, shuffle=False, num_workers=args.workers,sampler=test_sampler)
 
@@ -288,22 +243,13 @@ def main():
                     dropRate=args.drop,
                 )
     elif args.arch.startswith('densenet'):
-        if 'partial' in args.arch:
-            model = models.__dict__[args.arch](
-	                    num_classes=num_classes,
-	                    depth=args.depth,
-	                    growthRate=args.growthRate,
-	                    compressionRate=args.compressionRate,
-	                    dropRate=args.drop,part=args.part, zero_fixed_part=args.zero_fixed_part
-	                )   
-        else:
-            model = models.__dict__[args.arch](
-	                    num_classes=num_classes,
-	                    depth=args.depth,
-	                    growthRate=args.growthRate,
-	                    compressionRate=args.compressionRate,
-	                    dropRate=args.drop,
-	                )        
+        model = models.__dict__[args.arch](
+                    num_classes=num_classes,
+                    depth=args.depth,
+                    growthRate=args.growthRate,
+                    compressionRate=args.compressionRate,
+                    dropRate=args.drop,
+                )        
     elif args.arch.startswith('wrn'):
         if 'partial' in args.arch:
             print('==> initializing partial learning with p=',args.part)
@@ -329,11 +275,7 @@ def main():
                     depth=args.depth,
                 )
     else:
-        if 'partial' in args.arch:
-            print ('PARTIAL!!!!',args.arch)
-            model = models.__dict__[args.arch](num_classes=num_classes,part=args.part,zero_fixed_part=args.zero_fixed_part)
-        else:
-            model = models.__dict__[args.arch](num_classes=num_classes)
+        model = models.__dict__[args.arch](num_classes=num_classes)
 
     model = torch.nn.DataParallel(model).cuda()
     
@@ -344,38 +286,20 @@ def main():
         
     
     cudnn.benchmark = True
-    
+    print('    Total params: %.2fM' % (sum(p.numel() for p in model.parameters() if p.requires_grad)/1000000.0))
 
     criterion = nn.CrossEntropyLoss()
     opt_ = args.optimizer.lower()
     if args.only_layer != 'none':
         model = only_layer(model,args.only_layer)
-
-
-    # apply the learn-bn.
-    for m1,m2 in model.named_modules():
-        if 'bn' in m1:
-            for p in m2.parameters():
-                p.requires_grad = args.learn_bn
-
     params = trainableParams(model)
-    print('    Total params: %.2fM' % (sum(p.numel() for p in model.parameters() if p.requires_grad)/1000000.0))
     if opt_ == 'sgd':
-        print('optimizer.... - sgd')
+    	print('optimizer.... - sgd')
         optimizer = optim.SGD(params , lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay)
     elif opt_ == 'adam':
         optimizer = optim.Adam(params)
     else:
-        raise Exception('unsupported optimizer type',opt_)
-
-    nParamsPath = os.path.join(args.checkpoint, 'n_params.txt')
-    f = open(nParamsPath, 'w')
-    s1 = 'active_params {} \n'.format(sum(p.numel() for p in model.parameters() if p.requires_grad))
-    f.write(s1)
-    s2 = 'active_params {} \n'.format(sum(p.numel() for p in model.parameters()))
-    f.write(s2)
-    if args.print_params_and_exit:
-        exit()
+    	raise Exception('unsupported optimizer type',opt_)
 
     # Resume
     title = 'cifar-10-' + args.arch
@@ -402,8 +326,7 @@ def main():
             print('number of trainable params:',len(list(params)))
             optimizer = optim.SGD(params, lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay)
         else:
-            logger = Logger(os.path.join(args.checkpoint, 'log.txt'), title=title, resume=False) # Was True
-            logger.set_names(['Learning Rate', 'Train Loss', 'Valid Loss', 'Train Acc.', 'Valid Acc.'])
+            logger = Logger(os.path.join(args.checkpoint, 'log.txt'), title=title, resume=True)
             
     else:
         
@@ -419,21 +342,13 @@ def main():
         return
 
     # Train and val
-
-    scheduler = CosineAnnealingLR( optimizer, T_max=args.epochs)#  eta_min = 1e-9, last_epoch=args.epochs)
     for epoch in range(start_epoch, args.epochs):
-        if args.sgdr > 0:
-            #raise Exception('currently not supporting sgdr')
-            scheduler.step()
-        else:
-            adjust_learning_rate(optimizer, epoch)
+        adjust_learning_rate(optimizer, epoch)
 
-
-        print('\nEpoch: [%d | %d] LR: %f' % (epoch + 1, args.epochs, optimizer.param_groups[0]['lr']))# state['lr']))
+        print('\nEpoch: [%d | %d] LR: %f' % (epoch + 1, args.epochs, state['lr']))
 
         train_loss, train_acc = train(trainloader, model, criterion, optimizer, epoch, use_cuda)
         test_loss, test_acc = test(testloader, model, criterion, epoch, use_cuda)
-        #if req_perf_after_10_epochs > -1
 
         # append logger file
         logger.append([state['lr'], train_loss, test_loss, train_acc, test_acc])
@@ -458,11 +373,10 @@ def main():
 
 def train(trainloader, model, criterion, optimizer, epoch, use_cuda):
     # switch to train mode
-    #if args.learn_bn:
-   # 	model.train()
-    model.train()
-    #else:
-   # 	model.eval()
+    if args.learn_bn: 
+    	model.train()
+    else:
+    	model.eval()
 
     batch_time = AverageMeter()
     data_time = AverageMeter()
@@ -539,7 +453,7 @@ def test(testloader, model, criterion, epoch, use_cuda):
 
         if use_cuda:
             inputs, targets = inputs.cuda(), targets.cuda()
-        inputs, targets = torch.autograd.Variable(inputs), torch.autograd.Variable(targets)
+        inputs, targets = torch.autograd.Variable(inputs, volatile=True), torch.autograd.Variable(targets)
 
         # compute output
         outputs = model(inputs)
