@@ -1,8 +1,10 @@
 # define a conv2d module where only a fraction of the features is learned.
 import torch
 from torch import nn
+import math
 import torch.nn.functional as F
 from torch.autograd import Variable
+import torch.nn.init as init
 from torch.nn import Parameter
 
 class Conv2D_partial(nn.Module):
@@ -31,9 +33,17 @@ class Conv2D_partial(nn.Module):
             A_fixed.requires_grad = False
         return A, A_fixed, A_learn
 
-    def __init__(self, aConv, part=1.0, zero_fixed_part=False):
+    def __init__(self, aConv, part=1.0, zero_fixed_part=False,do_init=False):
         super(Conv2D_partial, self).__init__()
         # make a convolution, just to get the weight matrix.
+        assert(do_init)
+        if do_init: # initialize the params of the convolution before splitting.
+            print 'INITIALIZNG !!!!!'
+            m = aConv
+            n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
+            m.weight.data.normal_(0, math.sqrt(2. / n))
+
+            init.kaiming_uniform(aConv.weight.data)
 
         self.part = part
         in_channels, out_channels, kernel_size, stride, padding, dilation, groups, bias = \
