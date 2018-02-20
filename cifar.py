@@ -305,7 +305,7 @@ def main():
         train_sampler = data.sampler.SubsetRandomSampler(indices);
     trainloader = data.DataLoader(trainset, batch_size=args.train_batch, shuffle=toShuffle, num_workers=args.workers,sampler=train_sampler)
 
-    testset = dataloader(root=os.path.join(homeDir ,+args.dataset), train=False, download=False, transform=transform_test)
+    testset = dataloader(root=os.path.join(homeDir ,args.dataset), train=False, download=False, transform=transform_test)
     test_sampler=None
     if args.test_subsample < 1:
         n = int(float(len(testset)) * args.test_subsample)
