@@ -285,7 +285,7 @@ def main():
         num_classes = 100
 
 
-    trainset = dataloader(root='/home/amir/'+args.dataset, train=True, download=True, transform=transform_train)
+    trainset = dataloader(root=os.path.join(homeDir,args.dataset), train=True, download=True, transform=transform_train)
 
     train_sampler=None
     toShuffle = True
@@ -305,7 +305,7 @@ def main():
         train_sampler = data.sampler.SubsetRandomSampler(indices);
     trainloader = data.DataLoader(trainset, batch_size=args.train_batch, shuffle=toShuffle, num_workers=args.workers,sampler=train_sampler)
 
-    testset = dataloader(root='/home/amir/'+args.dataset, train=False, download=False, transform=transform_test)
+    testset = dataloader(root=os.path.join(homeDir ,+args.dataset), train=False, download=False, transform=transform_test)
     test_sampler=None
     if args.test_subsample < 1:
         n = int(float(len(testset)) * args.test_subsample)
