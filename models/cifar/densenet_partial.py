@@ -1,24 +1,25 @@
+import math
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import math
 
-from split_conv import Conv2D_partial
+from utils.split_conv import Conv2D_partial
 
 __all__ = ['densenet_partial']
 
 
-from torch.autograd import Variable
-
 class Bottleneck(nn.Module):
-    def __init__(self, inplanes, expansion=4, growthRate=12, dropRate=0,part=1.0,zero_fixed_part=False):
+    def __init__(self, inplanes, expansion=4, growthRate=12, dropRate=0,part=1.0,zero_fixed_part=False,
+                 do_init=False,split_dim=0):
         super(Bottleneck, self).__init__()
         planes = expansion * growthRate
         self.bn1 = nn.BatchNorm2d(inplanes)
-        self.conv1 = Conv2D_partial(nn.Conv2d(inplanes, planes, kernel_size=1, bias=False),part,zero_fixed_part)
+        self.conv1 = Conv2D_partial(nn.Conv2d(inplanes, planes, kernel_size=1, bias=False),
+                                    part,zero_fixed_part,do_init,split_dim)
         self.bn2 = nn.BatchNorm2d(planes)
         self.conv2 = Conv2D_partial(nn.Conv2d(planes, growthRate, kernel_size=3, 
-                               padding=1, bias=False),part,zero_fixed_part)
+                               padding=1, bias=False),part,zero_fixed_part,do_init,split_dim)
         self.relu = nn.ReLU(inplace=True)
         self.dropRate = dropRate
 
@@ -38,12 +39,13 @@ class Bottleneck(nn.Module):
 
 
 class BasicBlock(nn.Module):
-    def __init__(self, inplanes, expansion=1, growthRate=12, dropRate=0):
+    def __init__(self, inplanes, expansion=1, growthRate=12, dropRate=0,part=1.0,zero_fixed_part=False,
+                 do_init=False,split_dim=0):
         super(BasicBlock, self).__init__()
         planes = expansion * growthRate
         self.bn1 = nn.BatchNorm2d(inplanes)
         self.conv1 = Conv2D_partial(nn.Conv2d(inplanes, growthRate, kernel_size=3, 
-                               padding=1, bias=False),part,zero_fixed_part)
+                               padding=1, bias=False),part,zero_fixed_part,do_init,split_dim)
         self.relu = nn.ReLU(inplace=True)
         self.dropRate = dropRate
 
@@ -60,11 +62,11 @@ class BasicBlock(nn.Module):
 
 
 class Transition(nn.Module):
-    def __init__(self, inplanes, outplanes,part=1.0,zero_fixed_part=False):
+    def __init__(self, inplanes, outplanes,part=1.0,zero_fixed_part=False,do_init=False,split_dim=0):
         super(Transition, self).__init__()
         self.bn1 = nn.BatchNorm2d(inplanes)
         self.conv1 = Conv2D_partial(nn.Conv2d(inplanes, outplanes, kernel_size=1,
-                               bias=False),part,zero_fixed_part)
+                               bias=False),part,zero_fixed_part,do_init,split_dim)
         self.relu = nn.ReLU(inplace=True)
 
     def forward(self, x):
@@ -78,7 +80,8 @@ class Transition(nn.Module):
 class DenseNet_partial(nn.Module):
 
     def __init__(self, depth=22, block=Bottleneck, 
-        dropRate=0, num_classes=10, growthRate=12, compressionRate=2,part=1.0,zero_fixed_part=False):
+        dropRate=0, num_classes=10, growthRate=12, compressionRate=2,part=1.0,zero_fixed_part=False,
+                 do_init=False,split_dim=0):
         super(DenseNet_partial, self).__init__()
 
         assert (depth - 4) % 3 == 0, 'depth should be 3n+4'
@@ -89,14 +92,18 @@ class DenseNet_partial(nn.Module):
 
         # self.inplanes is a global variable used across multiple
         # helper functions
-        self.inplanes = growthRate * 2 
+        self.inplanes = growthRate * 2
+        #print 'BAH'
         self.conv1 = Conv2D_partial(nn.Conv2d(3, self.inplanes, kernel_size=3, padding=1,
-                               bias=False),part,zero_fixed_part)
-        self.dense1 = self._make_denseblock(block, n,part,zero_fixed_part)
-        self.trans1 = self._make_transition(compressionRate,part,zero_fixed_part)
-        self.dense2 = self._make_denseblock(block, n,part,zero_fixed_part)
-        self.trans2 = self._make_transition(compressionRate,part,zero_fixed_part)
-        self.dense3 = self._make_denseblock(block, n,part,zero_fixed_part)
+                               bias=False),part,zero_fixed_part,do_init,split_dim)
+        #print 'BOO'
+
+
+        self.dense1 = self._make_denseblock(block, n,part,zero_fixed_part,do_init,split_dim)
+        self.trans1 = self._make_transition(compressionRate,part,zero_fixed_part,do_init,split_dim)
+        self.dense2 = self._make_denseblock(block, n,part,zero_fixed_part,do_init,split_dim)
+        self.trans2 = self._make_transition(compressionRate,part,zero_fixed_part,do_init,split_dim)
+        self.dense3 = self._make_denseblock(block, n,part,zero_fixed_part,do_init,split_dim)
         self.bn = nn.BatchNorm2d(self.inplanes)
         self.relu = nn.ReLU(inplace=True)
         self.avgpool = nn.AvgPool2d(8)
@@ -111,21 +118,21 @@ class DenseNet_partial(nn.Module):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
 
-    def _make_denseblock(self, block, blocks,part,zero_fixed_part):
+    def _make_denseblock(self, block, blocks,part,zero_fixed_part,do_init,split_dim):
         layers = []
         for i in range(blocks):
             # Currently we fix the expansion ratio as the default value
             layers.append(block(self.inplanes, growthRate=self.growthRate, 
-                dropRate=self.dropRate,part=part,zero_fixed_part=zero_fixed_part))
+                dropRate=self.dropRate,part=part,zero_fixed_part=zero_fixed_part,do_init=do_init,split_dim=split_dim))
             self.inplanes += self.growthRate
 
         return nn.Sequential(*layers)
 
-    def _make_transition(self, compressionRate,part,zero_fixed_part):
+    def _make_transition(self, compressionRate,part,zero_fixed_part,do_init,split_dim):
         inplanes = self.inplanes
         outplanes = int(math.floor(self.inplanes // compressionRate))
         self.inplanes = outplanes
-        return Transition(inplanes, outplanes,part,zero_fixed_part)
+        return Transition(inplanes, outplanes,part,zero_fixed_part,do_init=do_init,split_dim=split_dim)
 
 
     def forward(self, x):

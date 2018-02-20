@@ -134,7 +134,7 @@ class DenseNet(nn.Module):
 
     def forward(self, x):
         x = self.conv1(x)
-        x = self.lateral1(x)
+
         x = self.trans1(self.dense1(x)) 
         x = self.trans2(self.dense2(x)) 
         x = self.dense3(x)

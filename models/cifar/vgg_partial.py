@@ -1,11 +1,11 @@
 '''VGG for CIFAR10. FC layers are removed.
 (c) YANG, Wei 
 '''
-import torch.nn as nn
-import torch.utils.model_zoo as model_zoo
 import math
 
-from split_conv import Conv2D_partial
+import torch.nn as nn
+
+from utils.split_conv import Conv2D_partial
 
 __all__ = [
     'VGG', 'vgg11', 'vgg11_bn', 'vgg13', 'vgg13_bn', 'vgg16', 'vgg16_bn',

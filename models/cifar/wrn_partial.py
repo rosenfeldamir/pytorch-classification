@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from split_conv import Conv2D_partial
+from utils.split_conv import Conv2D_partial
 
 __all__ = ['wrn_partial']
 

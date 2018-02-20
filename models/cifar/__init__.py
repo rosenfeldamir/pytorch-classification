@@ -78,4 +78,5 @@ from .wrn_columnar import *
 from .preresnet import *
 from .densenet import *
 from .densenet_partial import *
-from .split_conv import *
+from .squeezenet import *
+from .squeezenet_partial import *

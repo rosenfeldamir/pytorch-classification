@@ -1,12 +1,16 @@
-import math # this is adapted from the torchvision squeezenet.
+import torch
+import torch.nn as nn
+import torch.nn.init as init
+import torch.utils.model_zoo as model_zoo
+from utils.split_conv import Conv2D_partial
 import torch
 import torch.nn as nn
 import torch.nn.init as init
 import torch.utils.model_zoo as model_zoo
 
+from utils.split_conv import Conv2D_partial
 
-__all__ = ['SqueezeNet', 'squeezenet1_0', 'squeezenet1_1']
-
+__all__ = ['SqueezeNet_partial', 'squeezenet1_0_partial', 'squeezenet1_1_partial']
 
 model_urls = {
     'squeezenet1_0': 'https://download.pytorch.org/models/squeezenet1_0-a815701f.pth',
@@ -17,16 +21,16 @@ model_urls = {
 class Fire(nn.Module):
 
     def __init__(self, inplanes, squeeze_planes,
-                 expand1x1_planes, expand3x3_planes):
+                 expand1x1_planes, expand3x3_planes,part,zero_fixed_part=False,do_init=False):
         super(Fire, self).__init__()
         self.inplanes = inplanes
-        self.squeeze = nn.Conv2d(inplanes, squeeze_planes, kernel_size=1)
+        self.squeeze = Conv2D_partial(nn.Conv2d(inplanes, squeeze_planes, kernel_size=1),part,zero_fixed_part,do_init)
         self.squeeze_activation = nn.ReLU(inplace=True)
-        self.expand1x1 = nn.Conv2d(squeeze_planes, expand1x1_planes,
-                                   kernel_size=1)
+        self.expand1x1 = Conv2D_partial(nn.Conv2d(squeeze_planes, expand1x1_planes,
+                                   kernel_size=1),part,zero_fixed_part,do_init)
         self.expand1x1_activation = nn.ReLU(inplace=True)
-        self.expand3x3 = nn.Conv2d(squeeze_planes, expand3x3_planes,
-                                   kernel_size=3, padding=1)
+        self.expand3x3 = Conv2D_partial(nn.Conv2d(squeeze_planes, expand3x3_planes,
+                                   kernel_size=3, padding=1),part,zero_fixed_part,do_init)
         self.expand3x3_activation = nn.ReLU(inplace=True)
 
     def forward(self, x):
@@ -37,52 +41,52 @@ class Fire(nn.Module):
         ], 1)
 
 
-class SqueezeNet(nn.Module):
+class SqueezeNet_partial(nn.Module):
 
-    def __init__(self, version=1.0, num_classes=1000):
-        super(SqueezeNet, self).__init__()
+    def __init__(self, version=1.0, num_classes=1000,part=1.0,zero_fixed_part=False,do_init=False):
+        super(SqueezeNet_partial, self).__init__()
         if version not in [1.0, 1.1]:
             raise ValueError("Unsupported SqueezeNet version {version}:"
                              "1.0 or 1.1 expected".format(version=version))
         self.num_classes = num_classes
         if version == 1.0:
             self.features = nn.Sequential(
-                nn.Conv2d(3, 96, kernel_size=7, stride=2),
+                Conv2D_partial(nn.Conv2d(3, 96, kernel_size=7, stride=2),part,zero_fixed_part,do_init),
                 nn.ReLU(inplace=True),
                 nn.MaxPool2d(kernel_size=3, stride=2, ceil_mode=True),
-                Fire(96, 16, 64, 64),
-                Fire(128, 16, 64, 64),
-                Fire(128, 32, 128, 128),
+                Fire(96, 16, 64, 64,part,zero_fixed_part,do_init),
+                Fire(128, 16, 64, 64,part,zero_fixed_part,do_init),
+                Fire(128, 32, 128, 128,part,zero_fixed_part,do_init),
                 nn.MaxPool2d(kernel_size=3, stride=2, ceil_mode=True),
-                Fire(256, 32, 128, 128),
-                Fire(256, 48, 192, 192),
-                Fire(384, 48, 192, 192),
-                Fire(384, 64, 256, 256),
+                Fire(256, 32, 128, 128,part,zero_fixed_part,do_init),
+                Fire(256, 48, 192, 192,part,zero_fixed_part,do_init),
+                Fire(384, 48, 192, 192,part,zero_fixed_part,do_init),
+                Fire(384, 64, 256, 256,part,zero_fixed_part,do_init),
                 nn.MaxPool2d(kernel_size=3, stride=2, ceil_mode=True),
-                Fire(512, 64, 256, 256),
+                Fire(512, 64, 256, 256,part,zero_fixed_part),
             )
         else:
             self.features = nn.Sequential(
-                nn.Conv2d(3, 64, kernel_size=3, stride=2),
+                Conv2D_partial(nn.Conv2d(3, 64, kernel_size=3, stride=2),part,zero_fixed_part,do_init),
                 nn.ReLU(inplace=True),
                 nn.MaxPool2d(kernel_size=3, stride=2, ceil_mode=True),
-                Fire(64, 16, 64, 64),
-                Fire(128, 16, 64, 64),
+                Fire(64, 16, 64, 64,part,zero_fixed_part,do_init),
+                Fire(128, 16, 64, 64,part,zero_fixed_part,do_init),
                 nn.MaxPool2d(kernel_size=3, stride=2, ceil_mode=True),
-                Fire(128, 32, 128, 128),
-                Fire(256, 32, 128, 128),
+                Fire(128, 32, 128, 128,part,zero_fixed_part,do_init),
+                Fire(256, 32, 128, 128,part,zero_fixed_part,do_init),
                 nn.MaxPool2d(kernel_size=3, stride=2, ceil_mode=True),
-                Fire(256, 48, 192, 192),
-                Fire(384, 48, 192, 192),
-                Fire(384, 64, 256, 256),
-                Fire(512, 64, 256, 256),
+                Fire(256, 48, 192, 192,part,zero_fixed_part,do_init),
+                Fire(384, 48, 192, 192,part,zero_fixed_part,do_init),
+                Fire(384, 64, 256, 256,part,zero_fixed_part,do_init),
+                Fire(512, 64, 256, 256,part,zero_fixed_part,do_init),
             )
         # Final convolution is initialized differently form the rest
         final_conv = nn.Conv2d(512, self.num_classes, kernel_size=1)
         self.classifier = nn.Sequential(
             nn.Dropout(p=0.5),
-            final_conv,
-            nn.ReLU(inplace=True)
+            final_conv
+            #nn.ReLU(inplace=True)
             #nn.AvgPool2d(13, stride=1)
         )
 
@@ -101,20 +105,20 @@ class SqueezeNet(nn.Module):
         return x.view(x.size(0), self.num_classes)
 
 
-def squeezenet1_0(pretrained=False, **kwargs):
+def squeezenet1_0_partial(pretrained=False, **kwargs):
     r"""SqueezeNet model architecture from the `"SqueezeNet: AlexNet-level
     accuracy with 50x fewer parameters and <0.5MB model size"
     <https://arxiv.org/abs/1602.07360>`_ paper.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
-    model = SqueezeNet(version=1.0, **kwargs)
+    model = SqueezeNet_partial(version=1.0, **kwargs)
     if pretrained:
         model.load_state_dict(model_zoo.load_url(model_urls['squeezenet1_0']))
     return model
 
 
-def squeezenet1_1(pretrained=False, **kwargs):
+def squeezenet1_1_partial(pretrained=False, **kwargs):
     r"""SqueezeNet 1.1 model from the `official SqueezeNet repo
     <https://github.com/DeepScale/SqueezeNet/tree/master/SqueezeNet_v1.1>`_.
     SqueezeNet 1.1 has 2.4x less computation and slightly fewer parameters
@@ -122,7 +126,7 @@ def squeezenet1_1(pretrained=False, **kwargs):
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
-    model = SqueezeNet(version=1.1, **kwargs)
+    model = SqueezeNet_partial(version=1.1, **kwargs)
     if pretrained:
         model.load_state_dict(model_zoo.load_url(model_urls['squeezenet1_1']))
     return model

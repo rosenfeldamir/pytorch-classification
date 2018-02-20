@@ -33,24 +33,24 @@ class Conv2D_partial(nn.Module):
             A_fixed.requires_grad = False
         return A, A_fixed, A_learn
 
-    def __init__(self, aConv, part=1.0, zero_fixed_part=False,do_init=False):
+    def __init__(self, aConv, part=1.0, zero_fixed_part=False,do_init=False, split_dim=0):
         super(Conv2D_partial, self).__init__()
         # make a convolution, just to get the weight matrix.
-        assert(do_init)
+        #assert(do_init)
         if do_init: # initialize the params of the convolution before splitting.
-            print 'INITIALIZNG !!!!!'
+            #print 'INITIALIZNG !!!!!'
             m = aConv
             n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
             m.weight.data.normal_(0, math.sqrt(2. / n))
 
-            init.kaiming_uniform(aConv.weight.data)
+            #init.kaiming_uniform(aConv.weight.data)
 
         self.part = part
         in_channels, out_channels, kernel_size, stride, padding, dilation, groups, bias = \
             aConv.in_channels, aConv.out_channels, aConv.kernel_size, aConv.stride, aConv.padding, aConv.dilation, aConv.groups, aConv.bias
         # aConv = nn.Conv2d(in_channels, out_channels, kernel_size, stride=stride, padding=padding, dilation=dilation, groups=groups, bias=bias)
         W = aConv.weight.data.clone()
-        nPlanes = W.shape[0]  # number of convolution filters.
+        nPlanes = W.shape[split_dim]  # number of convolution filters.
 
         assert part >=0, 'part cannot be < 0'
 
@@ -58,14 +58,29 @@ class Conv2D_partial(nn.Module):
             n_to_learn = int(nPlanes * part)  # number of filters to actually learn
         else:
             part = int(part)
-            assert part <= nPlanes, 'part cannot be larger than number of planes in convolution: {}'.format(nPlanes)
+            assert part <= nPlanes,'part cannot be larger than number of planes in convolution: {}'.format(nPlanes)
+            if part > nPlanes:
+
+                print 'WARNING - PART IS MORE THAN nPlanes,setting to max'
+                part = nPlanes
+            #assert part <= nPlanes, 'part cannot be larger than number of planes in convolution: {}'.format(nPlanes)
             n_to_learn = part
             #print 'learning',part,'filters for this layer'
+        assert n_to_learn >=0,'cannot learn a negative number of filters'
+        #if n_to_learn < 1:
+        #    print 'WARNING!!! N_TO_LEARN WAS ZERO,SETTING TO 1'
+        #    n_to_learn=1
+
 
         n_to_fix = nPlanes - n_to_learn  # number of filters to keep fixed
         self.n_to_fix = n_to_fix
         self.n_to_learn = n_to_learn
-
+        self.split_dim = split_dim
+        if split_dim != 0:
+            print 'TRANSPOSING'
+            print 'before transpose:',W.shape
+            W = W.transpose(0,split_dim)
+            print 'after transpose :',W.shape
         self.W, self.W_fixed, self.W_learn = self.split_it(W, n_to_fix, n_to_learn,zero_fixed_part)
 
         self.has_bias = bias is not None
@@ -82,6 +97,10 @@ class Conv2D_partial(nn.Module):
     def forward(self, x):
 
         W = torch.cat(self.W, 0)
+        if self.split_dim!=0:
+            #print 'TRANSPOSING'
+            W = W.transpose(0,self.split_dim)
+            #print W.shape
         if self.has_bias:
             b = torch.cat(self.b, 0)
         else:

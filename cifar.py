@@ -20,6 +20,11 @@ import torch.utils.data as data
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import models.cifar as models
+from os.path import expanduser
+homeDir = expanduser('~')
+import sys
+sys.path.append(os.path.join(homeDir, 'YellowFin_Pytorch/tuner_utils/'))
+from yellowfin import YFOptimizer
 
 from utils import Bar, Logger, AverageMeter, accuracy, mkdir_p, savefig
 from torch.optim.lr_scheduler import CosineAnnealingLR
@@ -28,6 +33,7 @@ from torch.optim.lr_scheduler import CosineAnnealingLR
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
     and callable(models.__dict__[name]))
+model_names+=['squeezenet1_1']
 
 def str2bool(v):
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
@@ -72,6 +78,15 @@ parser.add_argument('-c', '--checkpoint', default='checkpoint', type=str, metava
                     help='path to save checkpoint (default: checkpoint)')
 parser.add_argument('--resume', default='', type=str, metavar='PATH',
                     help='path to latest checkpoint (default: none)')
+
+parser.add_argument('--dim-slice', default=0, type=int,
+                    help='on which dimension to split the conv. layer filters? (default 0)')
+
+parser.add_argument('--lateral-inhibition', default='none', type=str,
+                    help='type of lateral inhibition to apply, (default "none", means do nothing)')
+parser.add_argument('--learn-inhibition', type=str2bool,default=False,
+                    help='whether to learn the lateral inhibition layers or keep them fixed. ')
+
 # Architecture
 parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet20',
                     choices=model_names,
@@ -110,7 +125,9 @@ parser.add_argument('-r', '--retrain-layer', dest='retrain_layer',type=str, defa
 parser.add_argument('-f', '--only-layer', dest='only_layer',type=str, default='none', help='which layer to train (only this layer!)')
 parser.add_argument('-o', '--optimizer', type=str, default='sgd', help='optimizer')
 
-parser.add_argument('-p', '--part', type=float, default='-1', help='part(fraction) of filters to learn at each layer.')
+parser.add_argument('-p', '--part', type=float, default=-1, help='part(fraction) of filters to learn at each layer.')
+parser.add_argument('--load-fixed-path', type=str, default='', help='path of model from which to load fixed part (for ensembling)')
+
 
 parser.add_argument('--zero-fixed-part', type=str2bool,default=False,
                     help='retain fixed convolutional filters or zero them out (effectively reducing number of filters')
@@ -149,6 +166,27 @@ if use_cuda:
 best_acc = 0  # best test accuracy
 
 
+def split_model(model_full_dict, model_partial):
+    ''' Splits a fully parametrized model's convolutional parameters into
+        those of one with partial convolutions.
+    '''
+    partial_dict = model_partial.state_dict()
+    for a, W in model_full_dict.items():
+        if 'conv' in a:  # copy over the split convolutional layers.
+            # find the correponding parameter in the partial model.
+            a_partial_fixed = a.replace('weight', 'W_fixed')
+            a_partial_learn = a.replace('weight', 'W_learn')
+            W_fixed = partial_dict[a_partial_fixed]
+            W_learn = partial_dict[a_partial_learn]
+            W_fixed = W[:len(W_fixed)]
+            W_learn = W[len(W_fixed):]
+            partial_dict[a_partial_fixed] = W_fixed
+            partial_dict[a_partial_learn] = W_learn
+        else:
+            partial_dict[a] = W
+        model_partial.load_state_dict(partial_dict)
+
+
 def reinit_model_layer(model, retrain_layer, initial_dict):
     
     # copy over from the initial dict's layer to the existing model
@@ -185,7 +223,12 @@ def only_layer(model, theLayer):
     # copy over from the initial dict's layer to the existing model
     # for retraining
     model_name = str(type(model.module)).lower()
-    valid_layers = ['conv1','block1','block2','block3','fc']
+    valid_layers = ['conv1','block1','block2','block3','fc','train_nothing']
+
+    if theLayer == 'train_nothing':
+        for p in model.parameters():
+            p.requires_grad = False
+        return model
 
     print('!!!!',model_name)
     if 'dense' in model_name:
@@ -294,7 +337,8 @@ def main():
 	                    depth=args.depth,
 	                    growthRate=args.growthRate,
 	                    compressionRate=args.compressionRate,
-	                    dropRate=args.drop,part=args.part, zero_fixed_part=args.zero_fixed_part
+	                    dropRate=args.drop,part=args.part, zero_fixed_part=args.zero_fixed_part,do_init=True,
+                split_dim = args.dim_slice
 	                )   
         else:
             model = models.__dict__[args.arch](
@@ -302,7 +346,7 @@ def main():
 	                    depth=args.depth,
 	                    growthRate=args.growthRate,
 	                    compressionRate=args.compressionRate,
-	                    dropRate=args.drop,
+	                    dropRate=args.drop,lateral_inhibition=args.lateral_inhibition
 	                )        
     elif args.arch.startswith('wrn'):
         if 'partial' in args.arch:
@@ -321,7 +365,7 @@ def main():
                         num_classes=num_classes,
                         depth=args.depth,
                         widen_factor=args.widen_factor,
-                        dropRate=args.drop,
+                        dropRate=args.drop,lateral_inhibition=args.lateral_inhibition
                     )
     elif args.arch.endswith('resnet'):
         model = models.__dict__[args.arch](
@@ -331,11 +375,73 @@ def main():
     else:
         if 'partial' in args.arch:
             print ('PARTIAL!!!!',args.arch)
-            model = models.__dict__[args.arch](num_classes=num_classes,part=args.part,zero_fixed_part=args.zero_fixed_part)
+
+            #print '!!!!!!!!!!!!!!!!1'
+            model = models.__dict__[args.arch](num_classes=num_classes,part=args.part,zero_fixed_part=args.zero_fixed_part,do_init=True)
         else:
+            print('BOOYAH---------------!!')
             model = models.__dict__[args.arch](num_classes=num_classes)
 
+
+
+
+
+   # hack hack
+    #print('==============================', arch,'===============')
+    #if 'squeeze' in args.arch:
+    #    model.classifier = nn.Sequential(nn.Dropout(.5), nn.Conv2d(512, 10, kernel_size=(1, 1), stride=(1, 1)),
+    #                                     nn.ReLU())
+    #    print(model)
+    from copy import deepcopy
     model = torch.nn.DataParallel(model).cuda()
+    if args.load_fixed_path != '':
+        # load the (presumably) full model dict.
+        print('ensembling - loading old dict')
+        fixed_model_dict = torch.load(args.load_fixed_path)['state_dict']
+
+        #if 'partial'
+
+        if 'partial' in args.arch:
+            print('transerring to new and splitting')
+            split_model(fixed_model_dict,model)
+        else: # just load the dictionary as is and continue from this point.
+            model.load_state_dict(fixed_model_dict)
+    if False:
+        if args.load_fixed_path != '':
+            print('ENSEMBLING')
+            # load the fixed part of this classifier for ensembling
+
+            fixed_model_dict = torch.load(args.load_fixed_path)['state_dict']
+            model_dict = model.state_dict()
+
+            if args.part == -1:
+                print('-------------BABU-----------------')
+                model.load_state_dict(fixed_model_dict)
+
+            elif args.only_layer != 'none': # just copy everything, the layer will be reinitialized layer.
+                for a,b in model_dict.items():
+                    if args.only_layer not in a:
+                        model_dict[a] = deepcopy(fixed_model_dict[a])
+                model.load_state_dict(model_dict)
+            else:
+                for a, b in model_dict.items():
+                    # transfer all fixed values from loaded dictionary.
+                    if args.part < .5: # re-train learned part.
+                        if 'fixed' in a:
+                            model_dict[a] = deepcopy(fixed_model_dict[a])
+                    else: # re-train what was at first the random part :-)
+                        if 'learn' in a:
+                            model_dict[a] = deepcopy(fixed_model_dict[a])
+                model.load_state_dict(model_dict)
+
+                if args.part >= .5: # switch training between fixed / learned parts.
+                    print('HAHA, SWITCHING FIXED AND LEARNING')
+                    for a,b in model.module.named_parameters():
+                        if 'learn' in a:
+                            b.requires_grad = False
+                        else:
+                            b.requires_grad = True
+                        # otherwise, keep it as it is.
     
     assert not (args.retrain_layer != 'none' and args.only_layer != 'none'),'retrain-layer and only-layer options are mutually exclusive'
     
@@ -344,7 +450,9 @@ def main():
         
     
     cudnn.benchmark = True
-    
+
+    #model = models.squeezenet1_1()
+    #
 
     criterion = nn.CrossEntropyLoss()
     opt_ = args.optimizer.lower()
@@ -357,6 +465,9 @@ def main():
         if 'bn' in m1:
             for p in m2.parameters():
                 p.requires_grad = args.learn_bn
+    if args.learn_inhibition:
+        for p in model.module.parameters():
+            p.requires_grad=True
 
     params = trainableParams(model)
     print('    Total params: %.2fM' % (sum(p.numel() for p in model.parameters() if p.requires_grad)/1000000.0))
@@ -365,15 +476,20 @@ def main():
         optimizer = optim.SGD(params , lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay)
     elif opt_ == 'adam':
         optimizer = optim.Adam(params)
+    elif opt_ == 'yf':
+        print('USING YF OPTIMIZER')
+        optimizer = YFOptimizer(
+            params, lr=args.lr, mu=0.0, weight_decay=args.weight_decay, clip_thresh=2.0, curv_win_width=20)
+        optimizer._sparsity_debias = False
     else:
         raise Exception('unsupported optimizer type',opt_)
 
     nParamsPath = os.path.join(args.checkpoint, 'n_params.txt')
-    f = open(nParamsPath, 'w')
-    s1 = 'active_params {} \n'.format(sum(p.numel() for p in model.parameters() if p.requires_grad))
-    f.write(s1)
-    s2 = 'active_params {} \n'.format(sum(p.numel() for p in model.parameters()))
-    f.write(s2)
+    with open(nParamsPath, 'w') as f:
+        s1 = 'active_params {} \n'.format(sum(p.numel() for p in model.parameters() if p.requires_grad))
+        f.write(s1)
+        s2 = 'active_params {} \n'.format(sum(p.numel() for p in model.parameters()))
+        f.write(s2)
     if args.print_params_and_exit:
         exit()
 
@@ -420,16 +536,17 @@ def main():
 
     # Train and val
 
-    scheduler = CosineAnnealingLR( optimizer, T_max=args.epochs)#  eta_min = 1e-9, last_epoch=args.epochs)
+    #scheduler = CosineAnnealingLR( optimizer, T_max=args.epochs)#  eta_min = 1e-9, last_epoch=args.epochs)
     for epoch in range(start_epoch, args.epochs):
         if args.sgdr > 0:
             #raise Exception('currently not supporting sgdr')
             scheduler.step()
         else:
             adjust_learning_rate(optimizer, epoch)
-
-
-        print('\nEpoch: [%d | %d] LR: %f' % (epoch + 1, args.epochs, optimizer.param_groups[0]['lr']))# state['lr']))
+        if type(optimizer) is YFOptimizer:
+            print('\nEpoch: [%d | %d] LR: %f' % (epoch + 1, args.epochs, optimizer.get_lr_factor()))  # state['lr']))
+        else:
+            print('\nEpoch: [%d | %d] LR: %f' % (epoch + 1, args.epochs, optimizer.param_groups[0]['lr']))# state['lr']))
 
         train_loss, train_acc = train(trainloader, model, criterion, optimizer, epoch, use_cuda)
         test_loss, test_acc = test(testloader, model, criterion, epoch, use_cuda)
@@ -581,8 +698,11 @@ def adjust_learning_rate(optimizer, epoch):
     global state
     if epoch in args.schedule:
         state['lr'] *= args.gamma
-        for param_group in optimizer.param_groups:
-            param_group['lr'] = state['lr']
+        if type(optimizer) is YFOptimizer:
+            optimizer.set_lr_factor(optimizer.get_lr_factor() * args.gamma)
+        else:
+            for param_group in optimizer.param_groups:
+                param_group['lr'] = state['lr']
 
 if __name__ == '__main__':
     main()
