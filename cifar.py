@@ -86,6 +86,8 @@ parser.add_argument('--lateral-inhibition', default='none', type=str,
                     help='type of lateral inhibition to apply, (default "none", means do nothing)')
 parser.add_argument('--learn-inhibition', type=str2bool,default=False,
                     help='whether to learn the lateral inhibition layers or keep them fixed. ')
+parser.add_argument('--half', type=str2bool,default=False,
+                    help='whether to cast everything to 16bit by using half. ')
 
 # Architecture
 parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet20',
@@ -468,7 +470,7 @@ def main():
     if args.learn_inhibition:
         for p in model.module.parameters():
             p.requires_grad=True
-
+    
     params = trainableParams(model)
     print('    Total params: %.2fM' % (sum(p.numel() for p in model.parameters() if p.requires_grad)/1000000.0))
     if opt_ == 'sgd':
@@ -537,6 +539,9 @@ def main():
     # Train and val
 
     #scheduler = CosineAnnealingLR( optimizer, T_max=args.epochs)#  eta_min = 1e-9, last_epoch=args.epochs)
+    if args.half:
+        model = model.half()
+
     for epoch in range(start_epoch, args.epochs):
         if args.sgdr > 0:
             #raise Exception('currently not supporting sgdr')
@@ -596,7 +601,8 @@ def train(trainloader, model, criterion, optimizer, epoch, use_cuda):
         if use_cuda:
             inputs, targets = inputs.cuda(), targets.cuda(async=True)
         inputs, targets = torch.autograd.Variable(inputs), torch.autograd.Variable(targets)
-
+        if args.half:
+            inputs=inputs.half()
         # compute output
         outputs = model(inputs)
         loss = criterion(outputs, targets)
@@ -629,8 +635,7 @@ def train(trainloader, model, criterion, optimizer, epoch, use_cuda):
                     top5=top5.avg,
                     )
         bar.next()
-        
-        
+                
         
     bar.finish()
     return (losses.avg, top1.avg)
@@ -659,6 +664,8 @@ def test(testloader, model, criterion, epoch, use_cuda):
         inputs, targets = torch.autograd.Variable(inputs), torch.autograd.Variable(targets)
 
         # compute output
+        if args.half:
+            inputs=inputs.half()
         outputs = model(inputs)
         loss = criterion(outputs, targets)
 
