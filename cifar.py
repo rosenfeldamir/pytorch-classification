@@ -563,6 +563,16 @@ def main():
         # save model
         is_best = test_acc > best_acc
         best_acc = max(test_acc, best_acc)
+
+        if epoch % 5 == 0: # save each 5 epochs anyway
+            save_checkpoint({
+                'epoch': epoch + 1,
+                'state_dict': model.state_dict(),
+                'acc': test_acc,
+                'best_acc': best_acc,
+                'optimizer' : optimizer.state_dict(),
+            }, is_best, checkpoint=args.checkpoint,filename='checkpoint.pth.tar_'+str(epoch).zfill(4))
+
         save_checkpoint({
                 'epoch': epoch + 1,
                 'state_dict': model.state_dict(),
