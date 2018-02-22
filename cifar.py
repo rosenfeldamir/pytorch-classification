@@ -564,7 +564,7 @@ def main():
         is_best = test_acc > best_acc
         best_acc = max(test_acc, best_acc)
 
-        if epoch % 5 == 0: # save each 5 epochs anyway
+        if epoch % 10 == 0: # save each 10 epochs anyway
             save_checkpoint({
                 'epoch': epoch + 1,
                 'state_dict': model.state_dict(),
