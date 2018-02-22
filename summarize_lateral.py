@@ -54,7 +54,7 @@ for trial in range(5):
                     if isfile(ff):
                         results.append(dict(trial=trial,lateral=lateral,let_inhibition_learn=let_inhibition_learn,arch=the_arch,dataset=dataset,flines = open(ff).readlines()))
                     else:
-                        print 'file ff is missing!'
+                        print 'file', ff, 'is missing!'
 
 pickle.dump(results,open('/data/results_full.pkl','w'))
 
