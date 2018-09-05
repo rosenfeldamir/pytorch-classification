@@ -3,20 +3,24 @@ import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from utils.lateral import LateralInhibition
 
 myAffine=True
+
 __all__ = ['wideresnet']
 class BasicBlock(nn.Module):
-    def __init__(self, in_planes, out_planes, stride, dropRate=0.0):
+    def __init__(self, in_planes, out_planes, stride, dropRate=0.0,lateral_inhibition='none'):
         super(BasicBlock, self).__init__()
         self.bn1 = nn.BatchNorm2d(in_planes,affine=myAffine)
         self.relu1 = nn.ReLU(inplace=True)
         self.conv1 = nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
                                padding=1, bias=False)
+        self.lateral1 = LateralInhibition(self.conv1, lateral_inhibition)
         self.bn2 = nn.BatchNorm2d(out_planes,affine=myAffine)
         self.relu2 = nn.ReLU(inplace=True)
         self.conv2 = nn.Conv2d(out_planes, out_planes, kernel_size=3, stride=1,
                                padding=1, bias=False)
+        self.lateral2 = LateralInhibition(self.conv2, lateral_inhibition)
         self.droprate = dropRate
         self.equalInOut = (in_planes == out_planes)
         self.convShortcut = (not self.equalInOut) and nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride,
@@ -26,17 +30,17 @@ class BasicBlock(nn.Module):
             x = self.relu1(self.bn1(x))
         else:
             out = self.relu1(self.bn1(x))
-        out = self.relu2(self.bn2(self.conv1(out if self.equalInOut else x)))
+        out = self.relu2(self.bn2(self.lateral1(self.conv1(out if self.equalInOut else x)) ))
         if self.droprate > 0:
             out = F.dropout(out, p=self.droprate, training=self.training)
-        out = self.conv2(out)
+        out = self.lateral2(self.conv2(out))
         return torch.add(x if self.equalInOut else self.convShortcut(x), out)
 
 class NetworkBlock(nn.Module):
-    def __init__(self, nb_layers, in_planes, out_planes, block, stride, dropRate=0.0):
+    def __init__(self, nb_layers, in_planes, out_planes, block, stride, dropRate=0.0,lateral_inhibition='none'):
         super(NetworkBlock, self).__init__()
-        self.layer = self._make_layer(block, in_planes, out_planes, nb_layers, stride, dropRate)
-    def _make_layer(self, block, in_planes, out_planes, nb_layers, stride, dropRate):
+        self.layer = self._make_layer(block, in_planes, out_planes, nb_layers, stride, dropRate, lateral_inhibition)
+    def _make_layer(self, block, in_planes, out_planes, nb_layers, stride, dropRate, lateral_inhibition ):
         layers = []
         for i in range(nb_layers):
             layers.append(block(i == 0 and in_planes or out_planes, out_planes, i == 0 and stride or 1, dropRate))
@@ -45,7 +49,7 @@ class NetworkBlock(nn.Module):
         return self.layer(x)
 
 class WideResNet(nn.Module):
-    def __init__(self, depth, num_classes, widen_factor=1, dropRate=0.0,lastpool=8):
+    def __init__(self, depth, num_classes, widen_factor=1, dropRate=0.0,lastpool=8,lateral_inhibition='none'):
         super(WideResNet, self).__init__()
         nChannels = [16, 16*widen_factor, 32*widen_factor, 64*widen_factor]
         assert((depth - 4) % 6 == 0)
@@ -54,12 +58,13 @@ class WideResNet(nn.Module):
         # 1st conv before any network block
         self.conv1 = nn.Conv2d(3, nChannels[0], kernel_size=3, stride=1,
                                padding=1, bias=False)
+        self.lateral1 = LateralInhinition(self.conv1,)
         # 1st block
-        self.block1 = NetworkBlock(n, nChannels[0], nChannels[1], block, 2, dropRate)
+        self.block1 = NetworkBlock(n, nChannels[0], nChannels[1], block, 2, dropRate,lateral_inhibition)
         # 2nd block
-        self.block2 = NetworkBlock(n, nChannels[1], nChannels[2], block, 2, dropRate)
+        self.block2 = NetworkBlock(n, nChannels[1], nChannels[2], block, 2, dropRate,lateral_inhibition)
         # 3rd block
-        self.block3 = NetworkBlock(n, nChannels[2], nChannels[3], block, 2, dropRate)
+        self.block3 = NetworkBlock(n, nChannels[2], nChannels[3], block, 2, dropRate,lateral_inhibition)
         # global average pooling and classifier
         self.bn1 = nn.BatchNorm2d(nChannels[3],affine=myAffine)
         self.relu = nn.ReLU(inplace=True)
@@ -94,15 +99,21 @@ class WideResNet(nn.Module):
         out = self.block3(out)
         #out = F.avg_pool2d(out, 2)
         if toPrintStuff: print 'block3:',out.size()                
-        out = self.relu(self.bn1(out))        
+        out = self.relu(self.bn1(out))
         out = F.avg_pool2d(out, self.lastpool)
         if toPrintStuff: print 'block3:',out.size()
+
         out = out.view(-1, self.nChannels)
+        if toPrintStuff: print 'after flatten:', out.size()
+        if toPrintStuff: print 'fc layer:',self.fc
+
         return self.fc(out)
 
-def wideresnet(**kwargs):
+def wideresnet(depth=28, widen_factor=4, num_classes=1000,lateral_inhibition='none'):
     """
-    Constructs a Wide Residual Networks.
+    Construct ResNeXt-152.
     """
-    model = WideResNet(**kwargs)
-    return model
+    return WideResNet(depth=depth, num_classes=num_classes, widen_factor=widen_factor,lateral_inhibition=lateral_inhibition)
+
+    #model = ResNeXt_partial(baseWidth, cardinality, [3, 8, 36, 3], 1000,part,zero_fixed_part,do_init)
+    #return model

@@ -90,7 +90,9 @@ class WideResNet_partial(nn.Module):
         out = F.avg_pool2d(out, 8)
         out = out.view(-1, self.nChannels)
         return self.fc(out)
+    
 
+    
 def wrn_partial(**kwargs):
     """
     Constructs a Wide Residual Networks.

@@ -2,21 +2,12 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="4cd8e874-1562-47ce-a00d-ed06b488026b" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Lateral Inhibition.ipynb" afterPath="$PROJECT_DIR$/Lateral Inhibition.ipynb" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/RandomLayers.ipynb" afterPath="$PROJECT_DIR$/RandomLayers.ipynb" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/cifar.py" afterPath="$PROJECT_DIR$/cifar.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/imagenet.py" afterPath="$PROJECT_DIR$/imagenet.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/models/cifar/__init__.py" afterPath="$PROJECT_DIR$/models/cifar/__init__.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/models/cifar/alexnet_partial.py" afterPath="$PROJECT_DIR$/models/cifar/alexnet_partial.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/models/cifar/densenet.py" afterPath="$PROJECT_DIR$/models/cifar/densenet.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/models/cifar/densenet_partial.py" afterPath="$PROJECT_DIR$/models/cifar/densenet_partial.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/models/cifar/squeezenet.py" afterPath="$PROJECT_DIR$/models/cifar/squeezenet.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/models/cifar/squeezenet_partial.py" afterPath="$PROJECT_DIR$/models/cifar/squeezenet_partial.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/models/cifar/vgg_partial.py" afterPath="$PROJECT_DIR$/models/cifar/vgg_partial.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/models/cifar/wrn_partial.py" afterPath="$PROJECT_DIR$/models/cifar/wrn_partial.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/models/imagenet/WideResNet.py" afterPath="$PROJECT_DIR$/models/imagenet/WideResNet.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/models/imagenet/WideResNet_partial.py" afterPath="$PROJECT_DIR$/models/imagenet/WideResNet_partial.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/models/imagenet/__init__.py" afterPath="$PROJECT_DIR$/models/imagenet/__init__.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/models/imagenet/resnext_partial.py" afterPath="$PROJECT_DIR$/models/imagenet/resnext_partial.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/utils/split_conv.py" afterPath="$PROJECT_DIR$/utils/split_conv.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/utils/lateral.py" afterPath="$PROJECT_DIR$/utils/lateral.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/utils/misc.py" afterPath="$PROJECT_DIR$/utils/misc.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -27,13 +18,40 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="cifar.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="cifar.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/cifar.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="375">
-              <caret line="326" column="37" lean-forward="true" selection-start-line="326" selection-start-column="37" selection-end-line="326" selection-end-column="37" />
+            <state relative-caret-position="126">
+              <caret line="519" column="26" lean-forward="false" selection-start-line="519" selection-start-column="26" selection-end-line="519" selection-end-column="26" />
               <folding>
                 <element signature="e#70#107#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="module.py" pinned="false" current-in-tab="false">
+        <entry file="file://$USER_HOME$/anaconda3/envs/universe/lib/python2.7/site-packages/torch/nn/modules/module.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="6282">
+              <caret line="356" column="0" lean-forward="false" selection-start-line="356" selection-start-column="0" selection-end-line="356" selection-end-column="0" />
+              <folding>
+                <marker date="1518238585000" expanded="true" signature="525:26196" ph="..." />
+                <marker date="1518238585000" expanded="true" signature="8095:8117" ph="..." />
+                <marker date="1518238585000" expanded="true" signature="8104:8117" ph="&quot;&quot;&quot;Casts all floating point parameters and buffers to float datatype....&quot;&quot;&quot;" />
+                <marker date="1518238585000" expanded="true" signature="26168:26196" ph="..." />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="WideResNet.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/models/imagenet/WideResNet.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="108">
+              <caret line="10" column="14" lean-forward="false" selection-start-line="10" selection-start-column="14" selection-end-line="10" selection-end-column="14" />
+              <folding>
+                <element signature="e#1#12#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -42,22 +60,10 @@
       <file leaf-file-name="densenet.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/models/cifar/densenet.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="360">
-              <caret line="20" column="72" lean-forward="true" selection-start-line="20" selection-start-column="8" selection-end-line="20" selection-end-column="72" />
+            <state relative-caret-position="2520">
+              <caret line="140" column="22" lean-forward="false" selection-start-line="140" selection-start-column="22" selection-end-line="140" selection-end-column="22" />
               <folding>
                 <element signature="e#0#12#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="WideResNet.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/models/imagenet/WideResNet.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="90">
-              <caret line="47" column="25" lean-forward="true" selection-start-line="47" selection-start-column="25" selection-end-line="47" selection-end-column="25" />
-              <folding>
-                <element signature="e#1#12#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -66,8 +72,8 @@
       <file leaf-file-name="lateral.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/utils/lateral.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="486">
-              <caret line="27" column="21" lean-forward="false" selection-start-line="27" selection-start-column="21" selection-end-line="27" selection-end-column="21" />
+            <state relative-caret-position="360">
+              <caret line="27" column="54" lean-forward="false" selection-start-line="27" selection-start-column="54" selection-end-line="27" selection-end-column="54" />
               <folding>
                 <element signature="e#51#63#0" expanded="true" />
               </folding>
@@ -75,10 +81,30 @@
           </provider>
         </entry>
       </file>
+      <file leaf-file-name="wrn.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/models/cifar/wrn.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="1620">
+              <caret line="93" column="14" lean-forward="false" selection-start-line="93" selection-start-column="14" selection-end-line="93" selection-end-column="14" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="misc.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/utils/misc.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="288">
+              <caret line="24" column="0" lean-forward="false" selection-start-line="24" selection-start-column="0" selection-end-line="24" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
       <file leaf-file-name="WideResNet_partial.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/models/imagenet/WideResNet_partial.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-54">
+            <state relative-caret-position="0">
               <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
               <folding>
                 <element signature="e#0#11#0" expanded="true" />
@@ -91,15 +117,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>load-fi</find>
-      <find>load_fixed</find>
-      <find>--only</find>
-      <find>concat</find>
-      <find>self.w</find>
-      <find>def</find>
-      <find>split_model</find>
-      <find>ensemble</find>
-      <find>presum</find>
       <find>only_layer</find>
       <find>!!!</find>
       <find>train_only</find>
@@ -121,6 +138,15 @@
       <find>bottle</find>
       <find>lateral_inhibition</find>
       <find>conv2</find>
+      <find>schedu</find>
+      <find>out_ch</find>
+      <find>str2</find>
+      <find>self.</find>
+      <find>parameter(</find>
+      <find>filter_size</find>
+      <find>quit</find>
+      <find>logger</find>
+      <find>active</find>
     </findStrings>
     <dirStrings>
       <dir>$PROJECT_DIR$/models/cifar</dir>
@@ -134,7 +160,7 @@
       <list>
         <option value="$PROJECT_DIR$/NLS_utils.py" />
         <option value="$PROJECT_DIR$/resnet_NLS.py" />
-        <option value="$PROJECT_DIR$/../NLS/train_imagenet.py" />
+        <option value="$USER_HOME$/NLS/train_imagenet.py" />
         <option value="$PROJECT_DIR$/split_conv.py" />
         <option value="$PROJECT_DIR$/models/cifar/wrn.py" />
         <option value="$PROJECT_DIR$/models/cifar/wrn_primed.py" />
@@ -153,18 +179,19 @@
         <option value="$PROJECT_DIR$/models/cifar/squeezenet.py" />
         <option value="$PROJECT_DIR$/models/cifar/densenet_partial.py" />
         <option value="$PROJECT_DIR$/utils/split_conv.py" />
-        <option value="$PROJECT_DIR$/cifar.py" />
-        <option value="$PROJECT_DIR$/utils/lateral.py" />
         <option value="$PROJECT_DIR$/models/cifar/densenet.py" />
         <option value="$PROJECT_DIR$/models/imagenet/WideResNet.py" />
+        <option value="$PROJECT_DIR$/utils/misc.py" />
+        <option value="$PROJECT_DIR$/utils/lateral.py" />
+        <option value="$PROJECT_DIR$/cifar.py" />
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="2189" />
-    <option name="y" value="39" />
-    <option name="width" value="1285" />
-    <option name="height" value="933" />
+  <component name="ProjectFrameBounds">
+    <option name="x" value="2137" />
+    <option name="y" value="81" />
+    <option name="width" value="1379" />
+    <option name="height" value="897" />
   </component>
   <component name="ProjectView">
     <navigator currentView="ProjectPane" proportions="" version="1">
@@ -182,6 +209,7 @@
     </navigator>
     <panes>
       <pane id="Scope" />
+      <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -205,21 +233,14 @@
               <item name="pytorch-classification" type="462c0819:PsiDirectoryNode" />
               <item name="utils" type="462c0819:PsiDirectoryNode" />
             </path>
-            <path>
-              <item name="pytorch-classification" type="b2602c69:ProjectViewProjectNode" />
-              <item name="pytorch-classification" type="462c0819:PsiDirectoryNode" />
-              <item name="utils" type="462c0819:PsiDirectoryNode" />
-              <item name="progress" type="462c0819:PsiDirectoryNode" />
-            </path>
           </expand>
           <select />
         </subPane>
       </pane>
-      <pane id="Scratches" />
     </panes>
   </component>
   <component name="PropertiesComponent">
-    <property name="last_opened_file_path" value="$USER_HOME$/ssd.pytorch" />
+    <property name="last_opened_file_path" value="$USER_HOME$/pytorch-rl" />
     <property name="settings.editor.selected.configurable" value="preferences.keymap" />
   </component>
   <component name="PyConsoleOptionsProvider">
@@ -231,14 +252,14 @@
     </option>
   </component>
   <component name="RecentsManager">
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/utils" />
-      <recent name="$PROJECT_DIR$/models/cifar" />
-    </key>
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/models/cifar" />
       <recent name="$PROJECT_DIR$/models/imagenet" />
       <recent name="$PROJECT_DIR$" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/utils" />
+      <recent name="$PROJECT_DIR$/models/cifar" />
     </key>
   </component>
   <component name="RunDashboard">
@@ -267,7 +288,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="pytorch-classification" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/cifar.py" />
-      <option name="PARAMETERS" value="-a densenet --depth 100 --growthRate 12 --train-batch 64 --wd 1e-4 --gamma 0.1 --epochs 1 --checkpoint $USER_HOME$/checkpoints/cifar10/LIMIT_EPOCHS/densenet-bc-100-12_-1_iter_1_opt_sgd_subsample_1_only_train_nothing_ENS --start-epoch 0 --learn-bn True --lr 0.1 --optimizer sgd --subsample 1 --test-subsample 1 --zero-fixed-part False --part -1 --schedule 150 225 --dataset cifar10" />
+      <option name="PARAMETERS" value="-a wrn --depth 28 --widen-factor 10 --drop 0.3 --epochs 3 --schedule 60 120 160 --wd 5e-4 --gamma 0.2 --checkpoint ~/checkpoints/cifar10_inhibition/wrn-28-10-IN_default_True_IL_False-run_0_S3_R_with_repeats --lateral-inhibition default_True --learn-inhibition True --dataset cifar10 --quit-if-exists True" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
     </configuration>
@@ -294,26 +315,26 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="2189" y="39" width="1857" height="1092" extended-state="6" />
+    <frame x="2137" y="81" width="1379" height="897" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.14501348" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.1950689" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3997955" sideWeight="0.5018868" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3283582" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3997955" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3997955" sideWeight="0.49811321" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Data View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
     </layout>
     <layout-to-restore>
@@ -344,7 +365,7 @@
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/../NLS/train_imagenet.py</url>
+          <url>file://$USER_HOME$/NLS/train_imagenet.py</url>
           <option name="timeStamp" value="1" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -368,58 +389,23 @@
           <option name="timeStamp" value="13" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/cifar.py</url>
-          <line>137</line>
-          <option name="timeStamp" value="16" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/utils/lateral.py</url>
-          <line>1</line>
-          <option name="timeStamp" value="18" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/cifar.py</url>
-          <line>342</line>
-          <option name="timeStamp" value="19" />
+          <url>file://$PROJECT_DIR$/models/cifar/densenet.py</url>
+          <line>136</line>
+          <option name="timeStamp" value="34" />
         </line-breakpoint>
       </breakpoints>
-      <option name="time" value="20" />
+      <default-breakpoints>
+        <breakpoint type="python-exception">
+          <properties notifyOnTerminate="true" exception="BaseException">
+            <option name="notifyOnTerminate" value="true" />
+          </properties>
+        </breakpoint>
+      </default-breakpoints>
+      <option name="time" value="42" />
     </breakpoint-manager>
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/models/__init__.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/models/cifar/wrn_primed.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1890">
-          <caret line="108" column="42" lean-forward="false" selection-start-line="108" selection-start-column="42" selection-end-line="108" selection-end-column="42" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/utils/split_conv.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="216">
-          <caret line="16" column="0" lean-forward="false" selection-start-line="16" selection-start-column="0" selection-end-line="16" selection-end-column="0" />
-          <folding>
-            <element signature="e#75#87#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/ssd.pytorch_primed_bkp/ssd.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="486">
-          <caret line="35" column="35" lean-forward="false" selection-start-line="35" selection-start-column="35" selection-end-line="35" selection-end-column="35" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/cifar.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="5634">
@@ -469,9 +455,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="720">
           <caret line="44" column="0" lean-forward="false" selection-start-line="44" selection-start-column="0" selection-end-line="44" selection-end-column="0" />
-          <folding>
-            <element signature="e#75#87#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -495,16 +478,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../NLS/train_imagenet.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3924">
-          <caret line="236" column="5" lean-forward="false" selection-start-line="236" selection-start-column="5" selection-end-line="236" selection-end-column="5" />
-          <folding>
-            <element signature="e#0#15#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$USER_HOME$/NLS/train_imagenet.py" />
     <entry file="file://$PROJECT_DIR$/cifar.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
@@ -539,16 +513,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../NLS/train_imagenet.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="173">
-          <caret line="385" column="64" lean-forward="true" selection-start-line="385" selection-start-column="63" selection-end-line="385" selection-end-column="64" />
-          <folding>
-            <element signature="e#0#15#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$USER_HOME$/NLS/train_imagenet.py" />
     <entry file="file://$USER_HOME$/ssd.pytorch_primed_bkp/ssd.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="486">
@@ -582,13 +547,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="54">
           <caret line="6" column="0" lean-forward="false" selection-start-line="6" selection-start-column="0" selection-end-line="6" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/models/cifar/wrn.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1440">
-          <caret line="83" column="8" lean-forward="false" selection-start-line="83" selection-start-column="8" selection-end-line="83" selection-end-column="34" />
         </state>
       </provider>
     </entry>
@@ -707,12 +665,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="180">
           <caret line="10" column="25" lean-forward="false" selection-start-line="10" selection-start-column="25" selection-end-line="10" selection-end-column="25" />
-          <folding>
-            <marker date="1516891944000" expanded="true" signature="213:1165" ph="..." />
-            <marker date="1516891944000" expanded="true" signature="254:1027" ph="..." />
-            <marker date="1516891944000" expanded="true" signature="1054:1165" ph="..." />
-            <marker date="1516891944000" expanded="true" signature="1195:1311" ph="&quot;&quot;&quot;...&quot;&quot;&quot;" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -720,9 +672,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="126">
           <caret line="7" column="0" lean-forward="true" selection-start-line="0" selection-start-column="0" selection-end-line="157" selection-end-column="37" />
-          <folding>
-            <element signature="e#0#11#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -730,9 +679,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="162">
           <caret line="9" column="7" lean-forward="false" selection-start-line="9" selection-start-column="7" selection-end-line="9" selection-end-column="7" />
-          <folding>
-            <element signature="e#75#87#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -740,9 +686,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="108">
           <caret line="6" column="0" lean-forward="false" selection-start-line="6" selection-start-column="0" selection-end-line="6" selection-end-column="0" />
-          <folding>
-            <element signature="e#0#38#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -750,9 +693,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="887">
           <caret line="387" column="29" lean-forward="false" selection-start-line="387" selection-start-column="29" selection-end-line="387" selection-end-column="29" />
-          <folding>
-            <element signature="e#66#103#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -760,13 +700,12 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="252">
           <caret line="20" column="13" lean-forward="false" selection-start-line="20" selection-start-column="13" selection-end-line="20" selection-end-column="13" />
-          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/models/imagenet/WideResNet_partial.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-54">
+        <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#0#11#0" expanded="true" />
@@ -774,30 +713,32 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/cifar.py">
+    <entry file="file://$PROJECT_DIR$/utils/misc.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="375">
-          <caret line="326" column="37" lean-forward="true" selection-start-line="326" selection-start-column="37" selection-end-line="326" selection-end-column="37" />
-          <folding>
-            <element signature="e#70#107#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="288">
+          <caret line="24" column="0" lean-forward="false" selection-start-line="24" selection-start-column="0" selection-end-line="24" selection-end-column="0" />
+          <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/utils/lateral.py">
+    <entry file="file://$USER_HOME$/anaconda3/envs/universe/lib/python2.7/site-packages/torch/nn/parallel/data_parallel.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="486">
-          <caret line="27" column="21" lean-forward="false" selection-start-line="27" selection-start-column="21" selection-end-line="27" selection-end-column="21" />
-          <folding>
-            <element signature="e#51#63#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="185">
+          <caret line="65" column="0" lean-forward="false" selection-start-line="65" selection-start-column="0" selection-end-line="65" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda3/envs/universe/lib/python2.7/site-packages/torch/nn/modules/container.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="185">
+          <caret line="74" column="0" lean-forward="false" selection-start-line="74" selection-start-column="0" selection-end-line="74" selection-end-column="0" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/models/cifar/densenet.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="360">
-          <caret line="20" column="72" lean-forward="true" selection-start-line="20" selection-start-column="8" selection-end-line="20" selection-end-column="72" />
+        <state relative-caret-position="2520">
+          <caret line="140" column="22" lean-forward="false" selection-start-line="140" selection-start-column="22" selection-end-line="140" selection-end-column="22" />
           <folding>
             <element signature="e#0#12#0" expanded="true" />
           </folding>
@@ -806,10 +747,51 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/models/imagenet/WideResNet.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="90">
-          <caret line="47" column="25" lean-forward="true" selection-start-line="47" selection-start-column="25" selection-end-line="47" selection-end-column="25" />
+        <state relative-caret-position="108">
+          <caret line="10" column="14" lean-forward="false" selection-start-line="10" selection-start-column="14" selection-end-line="10" selection-end-column="14" />
           <folding>
             <element signature="e#1#12#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/models/cifar/wrn.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1620">
+          <caret line="93" column="14" lean-forward="false" selection-start-line="93" selection-start-column="14" selection-end-line="93" selection-end-column="14" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda3/envs/universe/lib/python2.7/site-packages/torch/nn/modules/module.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="6282">
+          <caret line="356" column="0" lean-forward="false" selection-start-line="356" selection-start-column="0" selection-end-line="356" selection-end-column="0" />
+          <folding>
+            <marker date="1518238585000" expanded="true" signature="525:26196" ph="..." />
+            <marker date="1518238585000" expanded="true" signature="8095:8117" ph="..." />
+            <marker date="1518238585000" expanded="true" signature="8104:8117" ph="&quot;&quot;&quot;Casts all floating point parameters and buffers to float datatype....&quot;&quot;&quot;" />
+            <marker date="1518238585000" expanded="true" signature="26168:26196" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/utils/lateral.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="360">
+          <caret line="27" column="54" lean-forward="false" selection-start-line="27" selection-start-column="54" selection-end-line="27" selection-end-column="54" />
+          <folding>
+            <element signature="e#51#63#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/cifar.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="126">
+          <caret line="519" column="26" lean-forward="false" selection-start-line="519" selection-start-column="26" selection-end-line="519" selection-end-column="26" />
+          <folding>
+            <element signature="e#70#107#0" expanded="true" />
           </folding>
         </state>
       </provider>

@@ -17,11 +17,9 @@ import torch.nn.parallel
 import torch.backends.cudnn as cudnn
 import torch.optim as optim
 import torch.utils.data as data
-from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import models.cifar as models
-import models.imagenet as imagenet_models
 from os.path import expanduser
 homeDir = expanduser('~')
 import sys
@@ -35,16 +33,15 @@ from torch.optim.lr_scheduler import CosineAnnealingLR
 
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
-    and callable(models.__dict__[name])) + (sorted(name for name in imagenet_models.__dict__
-    if name.islower() and not name.startswith("__")
-    and callable(imagenet_models.__dict__[name])))
+    and callable(models.__dict__[name]))
+model_names+=['squeezenet1_1']
 
 
-print('!!!!!!!!!!!!!!')
+
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10/100 Training')
 # Datasets
 parser.add_argument('-d', '--dataset', default='cifar10', type=str)
-parser.add_argument('-j', '--workers', default=1, type=int, metavar='N',
+parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
 # Optimization options
 parser.add_argument('--epochs', default=300, type=int, metavar='N',
@@ -157,7 +154,7 @@ assert not ('partial' in args.arch and args.part==-1),'partial architecture and 
 print('PART:',args.part)
 
 # Validate dataset
-assert args.dataset == 'cifar10' or args.dataset == 'cifar100' or args.dataset=='small_imagenet', 'Dataset can only be cifar10 or cifar100 or small_imagenet.'
+assert args.dataset == 'cifar10' or args.dataset == 'cifar100', 'Dataset can only be cifar10 or cifar100.'
 
 if args.sgdr > 0:
     args.epochs = args.sgdr
@@ -276,144 +273,124 @@ def main():
         mkdir_p(args.checkpoint)
 
     # Data
+    print('==> Preparing dataset %s' % args.dataset)
+    transform_train = transforms.Compose([
+        transforms.RandomCrop(32, padding=4),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    ])
 
-    if 'cifar' in args.dataset:
-        print('==> Preparing cifar dataset %s' % args.dataset)
-        transform_train = transforms.Compose([
-            transforms.RandomCrop(32, padding=4),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-        ])
-
-        transform_test = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-        ])
-        if args.dataset == 'cifar10':
-            dataloader = datasets.CIFAR10
-            num_classes = 10
-        else:
-            dataloader = datasets.CIFAR100
-            num_classes = 100
-
-
-        trainset = dataloader(root=os.path.join(homeDir,args.dataset), train=True, download=True, transform=transform_train)
-
-        train_sampler=None
-        toShuffle = True
-        if args.subsample < 1:
-            toShuffle=False
-            n = int(float(len(trainset)) * args.subsample)
-            assert n > 0,'must sample a positive number of training examples.'
-            train_sampler = data.sampler.SubsetRandomSampler(range(n))
-            print('==>SAMPLING FIRST',n,'TRAINING IMAGES')
-
-
-        if args.class_subset != '_':
-            print('*'+args.class_subset+'*')
-            toShuffle = False
-            args.class_subset = [int(i) for i in args.class_subset.split('_')]
-            indices = [i for i, p in enumerate(trainset.train_labels) if p in args.class_subset]
-            train_sampler = data.sampler.SubsetRandomSampler(indices);
-        trainloader = data.DataLoader(trainset, batch_size=args.train_batch, shuffle=toShuffle, num_workers=args.workers,sampler=train_sampler)
-
-        testset = dataloader(root=os.path.join(homeDir ,args.dataset), train=False, download=False, transform=transform_test)
-        test_sampler=None
-        if args.test_subsample < 1:
-            n = int(float(len(testset)) * args.test_subsample)
-            assert n > 0, 'must sample a positive number of training examples.'
-            test_sampler = data.sampler.SubsetRandomSampler(range(n))
-            print('==>SAMPLING FIRST', n, 'TESTTING IMAGES')
-
-        if type(args.class_subset) is list:
-            toShuffle = False
-            indices = [i for i, p in enumerate(testset.test_labels) if p in args.class_subset]
-            test_sampler = data.sampler.SubsetRandomSampler(indices);
-
-        testloader = data.DataLoader(testset, batch_size=args.test_batch, shuffle=False, num_workers=args.workers,sampler=test_sampler)
+    transform_test = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    ])
+    if args.dataset == 'cifar10':
+        dataloader = datasets.CIFAR10
+        num_classes = 10
     else:
-        train_dir = '/home/amir/data/imagenet12/train'
-        test_dir = '/home/amir/data/imagenet12/val'
-        normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                     std=[0.229, 0.224, 0.225])
-        transform_train = transforms.Compose([transforms.RandomCrop(64),transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),normalize])
-        transform_test=transforms.Compose([transforms.CenterCrop((64,64)), transforms.ToTensor(), normalize])
-            
-        trainloader = DataLoader(dataset=datasets.ImageFolder(root = train_dir, transform=transform_train),
-                    batch_size=args.train_batch, shuffle=True,num_workers=1)
-        
-        testloader = DataLoader(dataset=datasets.ImageFolder(root = test_dir, transform=transform_test),
-                    batch_size=64, shuffle=True)        
+        dataloader = datasets.CIFAR100
+        num_classes = 100
+
+
+    trainset = dataloader(root=os.path.join(homeDir,args.dataset), train=True, download=True, transform=transform_train)
+
+    train_sampler=None
+    toShuffle = True
+    if args.subsample < 1:
+        toShuffle=False
+        n = int(float(len(trainset)) * args.subsample)
+        assert n > 0,'must sample a positive number of training examples.'
+        train_sampler = data.sampler.SubsetRandomSampler(range(n))
+        print('==>SAMPLING FIRST',n,'TRAINING IMAGES')
+
+
+    if args.class_subset != '_':
+        print('*'+args.class_subset+'*')
+        toShuffle = False
+        args.class_subset = [int(i) for i in args.class_subset.split('_')]
+        indices = [i for i, p in enumerate(trainset.train_labels) if p in args.class_subset]
+        train_sampler = data.sampler.SubsetRandomSampler(indices);
+    trainloader = data.DataLoader(trainset, batch_size=args.train_batch, shuffle=toShuffle, num_workers=args.workers,sampler=train_sampler)
+
+    testset = dataloader(root=os.path.join(homeDir ,args.dataset), train=False, download=False, transform=transform_test)
+    test_sampler=None
+    if args.test_subsample < 1:
+        n = int(float(len(testset)) * args.test_subsample)
+        assert n > 0, 'must sample a positive number of training examples.'
+        test_sampler = data.sampler.SubsetRandomSampler(range(n))
+        print('==>SAMPLING FIRST', n, 'TESTTING IMAGES')
+
+    if type(args.class_subset) is list:
+        toShuffle = False
+        indices = [i for i, p in enumerate(testset.test_labels) if p in args.class_subset]
+        test_sampler = data.sampler.SubsetRandomSampler(indices);
+
+    testloader = data.DataLoader(testset, batch_size=args.test_batch, shuffle=False, num_workers=args.workers,sampler=test_sampler)
 
     # Model   
     print("==> creating model '{}'".format(args.arch))
-    if 'cifar' in args.dataset:
-        if args.arch.startswith('resnext'):
-            model = models.__dict__[args.arch](
-                        cardinality=args.cardinality,
-                        num_classes=num_classes,
-                        depth=args.depth,
-                        widen_factor=args.widen_factor,
-                        dropRate=args.drop,
-                    )
-        elif args.arch.startswith('densenet'):
-            if 'partial' in args.arch:
-                model = models.__dict__[args.arch](
-    	                    num_classes=num_classes,
-    	                    depth=args.depth,
-    	                    growthRate=args.growthRate,
-    	                    compressionRate=args.compressionRate,
-    	                    dropRate=args.drop,part=args.part, zero_fixed_part=args.zero_fixed_part,do_init=True,
-                    split_dim = args.dim_slice
-    	                )   
-            else:
-                model = models.__dict__[args.arch](
-    	                    num_classes=num_classes,
-    	                    depth=args.depth,
-    	                    growthRate=args.growthRate,
-    	                    compressionRate=args.compressionRate,
-    	                    dropRate=args.drop,lateral_inhibition=args.lateral_inhibition
-    	                )        
-        elif args.arch.startswith('wrn'):
-            if 'partial' in args.arch:
-                print('==> initializing partial learning with p=',args.part)
-
-                print('classes',num_classes,'depth',args.depth,'widen',args.widen_factor,'drop',args.drop,'part:',args.part)
-
-                model = models.__dict__[args.arch](
+    if args.arch.startswith('resnext'):
+        model = models.__dict__[args.arch](
+                    cardinality=args.cardinality,
                     num_classes=num_classes,
                     depth=args.depth,
                     widen_factor=args.widen_factor,
-                    dropRate=args.drop, part=args.part, zero_fixed_part=args.zero_fixed_part
+                    dropRate=args.drop,
                 )
-            else:
-                model = models.__dict__[args.arch](
-                            num_classes=num_classes,
-                            depth=args.depth,
-                            widen_factor=args.widen_factor,
-                            dropRate=args.drop,lateral_inhibition=args.lateral_inhibition
-                        )
-        elif args.arch.endswith('resnet'):
+    elif args.arch.startswith('densenet'):
+        if 'partial' in args.arch:
+            model = models.__dict__[args.arch](
+	                    num_classes=num_classes,
+	                    depth=args.depth,
+	                    growthRate=args.growthRate,
+	                    compressionRate=args.compressionRate,
+	                    dropRate=args.drop,part=args.part, zero_fixed_part=args.zero_fixed_part,do_init=True,
+                split_dim = args.dim_slice
+	                )   
+        else:
+            model = models.__dict__[args.arch](
+	                    num_classes=num_classes,
+	                    depth=args.depth,
+	                    growthRate=args.growthRate,
+	                    compressionRate=args.compressionRate,
+	                    dropRate=args.drop,lateral_inhibition=args.lateral_inhibition
+	                )        
+    elif args.arch.startswith('wrn'):
+        if 'partial' in args.arch:
+            print('==> initializing partial learning with p=',args.part)
+
+            print('classes',num_classes,'depth',args.depth,'widen',args.widen_factor,'drop',args.drop,'part:',args.part)
+
+            model = models.__dict__[args.arch](
+                num_classes=num_classes,
+                depth=args.depth,
+                widen_factor=args.widen_factor,
+                dropRate=args.drop, part=args.part, zero_fixed_part=args.zero_fixed_part
+            )
+        else:
             model = models.__dict__[args.arch](
                         num_classes=num_classes,
                         depth=args.depth,
+                        widen_factor=args.widen_factor,
+                        dropRate=args.drop,lateral_inhibition=args.lateral_inhibition
                     )
-        else:
-            if 'partial' in args.arch:
-                print ('PARTIAL!!!!',args.arch)
+    elif args.arch.endswith('resnet'):
+        model = models.__dict__[args.arch](
+                    num_classes=num_classes,
+                    depth=args.depth,
+                )
+    else:
+        if 'partial' in args.arch:
+            print ('PARTIAL!!!!',args.arch)
 
-                #print '!!!!!!!!!!!!!!!!1'
-                model = models.__dict__[args.arch](num_classes=num_classes,part=args.part,zero_fixed_part=args.zero_fixed_part)
-            else:
-                print('BOOYAH---------------!!')
-                model = models.__dict__[args.arch](num_classes=num_classes)
-    else: # must be imagenet
-        if 'partial' not in args.arch:
-            model = imagenet_models.__dict__[args.arch](depth=28, widen_factor=4, num_classes=1000)
+            #print '!!!!!!!!!!!!!!!!1'
+            model = models.__dict__[args.arch](num_classes=num_classes,part=args.part,zero_fixed_part=args.zero_fixed_part,do_init=True)
         else:
-            model = imagenet_models.__dict__[args.arch](depth=28, widen_factor=4, num_classes=1000,part=args.part,zero_fixed_part=args.zero_fixed_part)
+            print('BOOYAH---------------!!')
+            model = models.__dict__[args.arch](num_classes=num_classes)
+
+
 
 
 
@@ -460,7 +437,7 @@ def main():
                     if args.part < .5: # re-train learned part.
                         if 'fixed' in a:
                             model_dict[a] = deepcopy(fixed_model_dict[a])
-                    else: # re-train what was at first the random part :-)
+q	                    else: # re-train what was at first the random part :-)
                         if 'learn' in a:
                             model_dict[a] = deepcopy(fixed_model_dict[a])
                 model.load_state_dict(model_dict)

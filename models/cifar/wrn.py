@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-__all__ = ['wrn']
+__all__ = ['wrn','wrn_eb']
 from utils.lateral import LateralInhibition 
 class BasicBlock(nn.Module):
     def __init__(self, in_planes, out_planes, stride, dropRate=0.0,lateral_inhibition='none'):
@@ -91,9 +91,99 @@ class WideResNet(nn.Module):
         out = out.view(-1, self.nChannels)
         return self.fc(out)
 
+class WideResNet_EB(nn.Module):
+    def __init__(self, depth, num_classes, widen_factor=1, dropRate=0.0,lastpool=4,
+    	speccial_fc_channels=10,lateral_inhibition=False): # ignore for now.
+        super(WideResNet_EB, self).__init__()
+        nChannels = [16, 16*widen_factor, 32*widen_factor, 64*widen_factor]
+        assert((depth - 4) % 6 == 0)
+        n = (depth - 4) / 6
+        block = BasicBlock
+        # 1st conv before any network block
+        self.conv1 = nn.Conv2d(3, nChannels[0], kernel_size=3, stride=1,
+                               padding=1, bias=False)
+        # 1st block
+        self.block1 = NetworkBlock(n, nChannels[0], nChannels[1], block, 2, dropRate)
+        # 2nd block
+        self.block2 = NetworkBlock(n, nChannels[1], nChannels[2], block, 2, dropRate)
+        # 3rd block
+        self.block3 = NetworkBlock(n, nChannels[2], nChannels[3], block, 2, dropRate)
+        
+        special_blocks = []
+        special_p = []
+        M = nChannels[3]/num_classes
+        self.M=M
+        for i in range(num_classes):
+            
+            z = NetworkBlock(n, nChannels[2], M, block, 2, dropRate)
+            b = nn.BatchNorm2d(M)
+            special_blocks.append(nn.Sequential(z,b,nn.ReLU()))
+            special_p.append(nn.Linear(M,1))    
+        self.special_blocks = nn.ModuleList(special_blocks)
+        self.special_p = nn.ModuleList(special_p)
+             
+        
+        # global average pooling and classifier
+        self.bn1 = nn.BatchNorm2d(nChannels[3])
+        self.relu = nn.ReLU(inplace=True)
+        self.fc = nn.Linear(nChannels[3], num_classes)
+    
+        self.nChannels = nChannels[3]
+        self.lastpool = lastpool
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
+                m.weight.data.normal_(0, math.sqrt(2. / n))
+            elif isinstance(m, nn.BatchNorm2d) and m.affine:
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
+            elif isinstance(m, nn.Linear):
+                m.bias.data.zero_()
+                #nn.init(m.weight,)
+    def forward(self, x):
+        toPrintStuff=False
+        out = self.conv1(x)
+        out = self.block1(out)
+        #out = F.avg_pool2d(out, 2)
+
+        out = self.block2(out)
+        #out = F.avg_pool2d(out, 2)
+        #print 'block2 output size:',out.size()
+        out_special = []
+        for my_block,my_fc in zip(self.special_blocks,self.special_p):
+            cur_out = my_block(out)
+            cur_out = F.avg_pool2d(cur_out, self.lastpool)
+            cur_out = cur_out.view(-1,self.M)
+            cur_out = my_fc(cur_out)
+            out_special.append(cur_out)
+        out_special = torch.cat(out_special,1)
+        out = self.block3(out)
+        #out = F.avg_pool2d(out, 2)
+        out = self.relu(self.bn1(out))        
+        out = F.avg_pool2d(out, self.lastpool)
+        out = out.view(-1, self.nChannels)
+        #for z in self.special_fc:
+        #    print z(out).shape
+        
+        
+        #if toPrintStuff: print 'block3:',out.size()
+        #return self.fc(out)
+        #print out.shape
+        #print out_special.shape
+        return self.fc(out)+out_special
+
+
+    
 def wrn(**kwargs):
     """
     Constructs a Wide Residual Networks.
     """
     model = WideResNet(**kwargs)
+    return model
+
+def wrn_eb(**kwargs):
+    """
+    Constructs a Wide Residual Networks.
+    """
+    model = WideResNet_EB(**kwargs)
     return model
